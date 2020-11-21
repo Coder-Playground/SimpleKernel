@@ -29,6 +29,7 @@ pte_t pte_NORMAL[VMM_PAGE_TABLES_NORMAL][VMM_PAGES_PRE_PAGE_TABLE]
 pte_t pte_HIGHMEM[VMM_PAGE_TABLES_HIGHMEM][VMM_PAGES_PRE_PAGE_TABLE]
     __attribute__((aligned(VMM_PAGE_SIZE)));
 
+// TODO: 完善缺页处理
 void page_fault(pt_regs_t *pt_regs) {
 #ifdef __x86_64__
     uint64_t cr2;
@@ -72,12 +73,13 @@ void page_fault(pt_regs_t *pt_regs) {
     }
 }
 
-// 根据 zone 机制，内核可用区域为
+// 执行完成后，开启虚拟内存
+// 内核可访问所有内存
 void vmm_init(void) {
     register_interrupt_handler(INT_PAGE_FAULT, &page_fault);
     uint32_t pgd_idx = 0;
     ptr_t *  pte     = NULL;
-
+    // 根据 zone 机制，内核可用区域为 DMA, NORMAL, HIGHMEM
     // 映射 DMA
     pgd_idx = VMM_PGD_INDEX(DMA_START_ADDR);
     for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_DMA; i++, j++) {
