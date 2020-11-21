@@ -75,6 +75,7 @@ extern ptr_t *kernel_end;
 #define PMM_PAGE_SIZE (0x1000UL)
 #endif
 
+// TODO: 升级到 64 位后不需要 HIGHMEM
 // 总共3个区域
 #define ZONE_SUM 3
 // 内存分区对应下标

@@ -56,11 +56,11 @@ void pmm_zone_init(e820map_t *e820map) {
         if (address < (ptr_t)NORMAL_START_ADDR) {
             count_dma++;
         }
-        // 大于 16MB 小于 110MB
+        // 大于 16MB 小于 896MB
         else if (address < (ptr_t)HIGHMEM_START_ADDR) {
             count_normal++;
         }
-        // 110MB 至结束
+        // 896MB 至结束
         else {
             count_highmem++;
         }
@@ -85,13 +85,13 @@ void pmm_zone_init(e820map_t *e820map) {
                 mem_page[j].ref  = 0;
                 free_dma++;
             }
-            // 大于 16MB 小于 110MB
+            // 大于 16MB 小于 896MB
             else if (addr < (ptr_t)HIGHMEM_START_ADDR) {
                 mem_page[j].zone = NORMAL;
                 mem_page[j].ref  = 0;
                 free_normal++;
             }
-            // 110MB 至结束
+            // 896MB 至结束
             else {
                 mem_page[j].zone = HIGHMEM;
                 mem_page[j].ref  = 0;

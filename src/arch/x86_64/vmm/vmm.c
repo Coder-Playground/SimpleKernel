@@ -80,6 +80,7 @@ void vmm_init(void) {
     uint32_t pgd_idx = 0;
     ptr_t *  pte     = NULL;
     // 根据 zone 机制，内核可用区域为 DMA, NORMAL, HIGHMEM
+    // TODO: 将物理地址前 0～1GB 映射到虚拟地址 0xC0000000～0xF0000000
     // 映射 DMA
     pgd_idx = VMM_PGD_INDEX(DMA_START_ADDR);
     for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_DMA; i++, j++) {
