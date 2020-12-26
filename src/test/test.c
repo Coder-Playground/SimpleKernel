@@ -37,12 +37,12 @@ bool test_pmm(void) {
     ptr_t    addr3      = 0x00;
     ptr_t    addr4      = 0x00;
     uint32_t free_count = pmm_free_pages_count();
-    addr1               = pmm_alloc_page(0x9f);
-    assert(pmm_free_pages_count() == free_count - 0x9f,
+    addr1               = pmm_alloc_page(0x9F);
+    assert(pmm_free_pages_count() == free_count - 0x9F,
            "pmm test addr1 alloc.\n");
     *(uint32_t *)addr1 = cd;
     assert((*(uint32_t *)addr1 == cd), "pmm test addr1 assignment.\n");
-    pmm_free_page(addr1, 0x9f);
+    pmm_free_page(addr1, 0x9F);
     assert(pmm_free_pages_count() == free_count, "pmm test addr1 free.\n");
     addr2 = pmm_alloc_page(1);
     assert(pmm_free_pages_count() == free_count - 1, "pmm test addr2 alloc.\n");
