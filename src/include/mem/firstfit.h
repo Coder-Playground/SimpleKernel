@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#include "stdint.h"
 #include "pmm.h"
 
 // 块
@@ -40,7 +41,7 @@ typedef struct firstfit_manage {
     // 物理内存页的总数量
     uint32_t phy_page_count;
     // 物理内存页的当前数量
-    uint32_t phy_page_now_count;
+    uint32_t phy_page_free_count;
     // 空闲链表的节点数量
     uint32_t node_num;
     // 空闲链表
@@ -51,9 +52,7 @@ typedef struct firstfit_manage {
 extern pmm_manage_t firstfit_manage;
 
 // 分区管理，定义3个管理器，均使用first-fit算法
-extern firstfit_manage_t ff_manage_dma;
-extern firstfit_manage_t ff_manage_normal;
-extern firstfit_manage_t ff_manage_highmem;
+extern firstfit_manage_t ff_manage;
 
 #ifdef __cplusplus
 }

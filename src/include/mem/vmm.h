@@ -63,42 +63,24 @@ extern "C" {
 
 // 映射全部虚拟内存需要的页目录数 = 虚拟内存大小/页目录大小 2^0
 #define VMM_PAGE_DIRECTORIES_TOTAL                                             \
-    ((uint64_t)((VMM_VMEM_SIZE / VMM_PAGE_DIRECTORY_SIZE) + 0.5))
+    ((uint64_t)((VMM_VMEM_SIZE / VMM_PAGE_DIRECTORY_SIZE) +                    \
+                            (VMM_VMEM_SIZE % VMM_PAGE_DIRECTORY_SIZE) ==       \
+                        0                                                      \
+                    ? 0                                                        \
+                    : 1))
 
 // 映射内核需要的页数
 #define VMM_PAGES_KERNEL (PMM_PAGES_KERNEL)
 
 // 映射内核需要的页表数
 #define VMM_PAGE_TABLES_KERNEL                                                 \
-    ((uint64_t)((KERNEL_SIZE / VMM_PAGE_TABLE_SIZE) + 0.5))
+    ((uint64_t)((KERNEL_SIZE / VMM_PAGE_TABLE_SIZE) +                          \
+                (KERNEL_SIZE % VMM_PAGE_TABLE_SIZE == 0 ? 0 : 1)))
 
 // 映射内核需要的页目录数
 #define VMM_PAGE_DIRECTORIES_KERNEL                                            \
-    ((uint64_t)((KERNEL_SIZE / VMM_PAGE_DIRECTORY_SIZE) + 0.5))
-
-// 映射 DMA 需要的页数
-#define VMM_PAGES_DMA (DMA_SIZE / VMM_PAGE_SIZE)
-// 映射 DMA 需要的页表数
-#define VMM_PAGE_TABLES_DMA ((DMA_SIZE / VMM_PAGE_TABLE_SIZE))
-// 映射 DMA 需要的页目录数
-#define VMM_PAGE_DIRECTORIES_DMA                                               \
-    ((uint64_t)((DMA_SIZE / VMM_PAGE_DIRECTORY_SIZE) + 0.5))
-
-// 映射 NORMAL 需要的页数
-#define VMM_PAGES_NORMAL (NORMAL_SIZE / VMM_PAGE_SIZE)
-// 映射 NORMAL 需要的页表数
-#define VMM_PAGE_TABLES_NORMAL (NORMAL_SIZE / VMM_PAGE_TABLE_SIZE)
-// 映射 NORMAL 需要的页目录数
-#define VMM_PAGE_DIRECTORIES_NORMAL                                            \
-    ((uint64_t)((NORMAL_SIZE / VMM_PAGE_DIRECTORY_SIZE) + 0.5))
-
-// 映射 HIGHMEM 需要的页数
-#define VMM_PAGES_HIGHMEM (HIGHMEM_SIZE / VMM_PAGE_SIZE)
-// 映射 HIGHMEM 需要的页表数
-#define VMM_PAGE_TABLES_HIGHMEM ((HIGHMEM_SIZE / VMM_PAGE_TABLE_SIZE))
-// 映射 HIGHMEM 需要的页目录数
-#define VMM_PAGE_DIRECTORIES_HIGHMEM                                           \
-    ((uint64_t)((HIGHMEM_SIZE / VMM_PAGE_DIRECTORY_SIZE) + 0.5))
+    ((uint64_t)((KERNEL_SIZE / VMM_PAGE_DIRECTORY_SIZE) +                      \
+                (KERNEL_SIZE % VMM_PAGE_DIRECTORY_SIZE == 0 ? 0 : 1)))
 
 // P = 1 表示有效； P = 0 表示无效。
 #define VMM_PAGE_PRESENT (0x00000001)

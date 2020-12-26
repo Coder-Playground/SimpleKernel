@@ -17,16 +17,8 @@ extern "C" {
 pmd_t pgd_kernel[VMM_PAGE_TABLES_PRE_PAGE_DIRECTORY]
     __attribute__((aligned(VMM_PAGE_SIZE)));
 
-// DMA 页表区域，内容为页表项
-pte_t pte_DMA[VMM_PAGE_TABLES_DMA][VMM_PAGES_PRE_PAGE_TABLE]
-    __attribute__((aligned(VMM_PAGE_SIZE)));
-
-// NORMAL 页表区域
-pte_t pte_NORMAL[VMM_PAGE_TABLES_NORMAL][VMM_PAGES_PRE_PAGE_TABLE]
-    __attribute__((aligned(VMM_PAGE_SIZE)));
-
-// HIGHMEM 页表区域
-pte_t pte_HIGHMEM[VMM_PAGE_TABLES_HIGHMEM][VMM_PAGES_PRE_PAGE_TABLE]
+// 内核页表区域，内容为页表项
+pte_t pte_kernel[VMM_PAGE_TABLES_KERNEL][VMM_PAGES_PRE_PAGE_TABLE]
     __attribute__((aligned(VMM_PAGE_SIZE)));
 
 // TODO: 完善缺页处理
@@ -79,38 +71,14 @@ void vmm_init(void) {
     register_interrupt_handler(INT_PAGE_FAULT, &page_fault);
     uint32_t pgd_idx = 0;
     ptr_t *  pte     = NULL;
-    // 根据 zone 机制，内核可用区域为 DMA, NORMAL, HIGHMEM
     // TODO: 将物理地址前 0～1GB 映射到虚拟地址 0xC0000000～0xF0000000
-    // 映射 DMA
-    pgd_idx = VMM_PGD_INDEX(DMA_START_ADDR);
-    for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_DMA; i++, j++) {
-        pgd_kernel[i] = ((ptr_t)VMM_LA_PA((ptr_t)pte_DMA[j]) |
+    pgd_idx = VMM_PGD_INDEX(0x00);
+    for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_KERNEL; i++, j++) {
+        pgd_kernel[i] = ((ptr_t)VMM_LA_PA((ptr_t)pte_kernel[j]) |
                          VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
     }
-    pte = (ptr_t *)pte_DMA;
-    for (uint32_t i = 0; i < VMM_PAGES_DMA; i++) {
-        pte[i] = (i << 12) | VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL;
-    }
-
-    // 映射 NORMAL
-    pgd_idx = VMM_PGD_INDEX(NORMAL_START_ADDR);
-    for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_NORMAL; i++, j++) {
-        pgd_kernel[i] = ((ptr_t)VMM_LA_PA((ptr_t)pte_NORMAL[j]) |
-                         VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
-    }
-    pte = (ptr_t *)pte_NORMAL;
-    for (uint32_t i = 0; i < VMM_PAGES_NORMAL; i++) {
-        pte[i] = (i << 12) | VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL;
-    }
-
-    // 映射 HIGHMEM
-    pgd_idx = VMM_PGD_INDEX(HIGHMEM_START_ADDR);
-    for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_HIGHMEM; i++, j++) {
-        pgd_kernel[i] = ((ptr_t)VMM_LA_PA((ptr_t)pte_HIGHMEM[j]) |
-                         VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
-    }
-    pte = (ptr_t *)pte_HIGHMEM;
-    for (uint32_t i = 0; i < VMM_PAGES_HIGHMEM; i++) {
+    pte = (ptr_t *)pte_kernel;
+    for (uint32_t i = 0; i < VMM_PAGES_KERNEL; i++) {
         pte[i] = (i << 12) | VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL;
     }
 
