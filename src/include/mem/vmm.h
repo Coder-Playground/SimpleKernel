@@ -69,18 +69,21 @@ extern "C" {
                     ? 0                                                        \
                     : 1))
 
+// 为内核大小+用于管理物理内存的管理结构空间大小 KERNEL_SIZE+16MB
+#define VMM_KERNEL_SIZE (KERNEL_SIZE + 0x1000000UL)
+
 // 映射内核需要的页数
-#define VMM_PAGES_KERNEL (PMM_PAGES_KERNEL)
+#define VMM_PAGES_KERNEL (VMM_KERNEL_SIZE / VMM_PAGE_SIZE)
 
 // 映射内核需要的页表数
 #define VMM_PAGE_TABLES_KERNEL                                                 \
-    ((uint64_t)((KERNEL_SIZE / VMM_PAGE_TABLE_SIZE) +                          \
-                (KERNEL_SIZE % VMM_PAGE_TABLE_SIZE == 0 ? 0 : 1)))
+    ((uint64_t)((VMM_KERNEL_SIZE / VMM_PAGE_TABLE_SIZE) +                      \
+                (VMM_KERNEL_SIZE % VMM_PAGE_TABLE_SIZE == 0 ? 0 : 1)))
 
 // 映射内核需要的页目录数
 #define VMM_PAGE_DIRECTORIES_KERNEL                                            \
-    ((uint64_t)((KERNEL_SIZE / VMM_PAGE_DIRECTORY_SIZE) +                      \
-                (KERNEL_SIZE % VMM_PAGE_DIRECTORY_SIZE == 0 ? 0 : 1)))
+    ((uint64_t)((VMM_KERNEL_SIZE / VMM_PAGE_DIRECTORY_SIZE) +                  \
+                (VMM_KERNEL_SIZE % VMM_PAGE_DIRECTORY_SIZE == 0 ? 0 : 1)))
 
 // P = 1 表示有效； P = 0 表示无效。
 #define VMM_PAGE_PRESENT (0x00000001)
