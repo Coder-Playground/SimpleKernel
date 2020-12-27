@@ -18,6 +18,7 @@ extern "C" {
 #include "arch_init.h"
 #include "keyboard.h"
 #include "vmm.h"
+#include "heap.h"
 #include "test.h"
 
 // 内核入口
@@ -36,6 +37,8 @@ void kernel_main(ptr_t magic, ptr_t addr) {
     debug_init(magic, addr);
     // 物理内存初始化
     pmm_init();
+    // 堆初始化
+    heap_init();
     // 虚拟内存初始化
     vmm_init();
 
