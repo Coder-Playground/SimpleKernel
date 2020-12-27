@@ -65,32 +65,78 @@ void page_fault(pt_regs_t *pt_regs) {
     return;
 }
 
+// 当前页目录
+page_dir_t *page_dir_curr = NULL;
+// 内核页目录
+page_dir_t *page_dir_k = NULL;
+// page_dir_t   pgdk __attribute__((aligned(VMM_PAGE_SIZE)));
+// page_table_t ptk[VMM_PAGES_KERNEL] __attribute__((aligned(VMM_PAGE_SIZE)));
+
 // 执行完成后，开启虚拟内存
 // 内核可访问所有内存
 void vmm_init(void) {
     register_interrupt_handler(INT_PAGE_FAULT, &page_fault);
-    uint32_t pgd_idx = 0;
-    ptr_t *  pte     = NULL;
-    // TODO: 将物理地址前 0～1GB 映射到虚拟地址 0xC0000000～0xF0000000
-    pgd_idx = VMM_PGD_INDEX(0x00);
-    for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_KERNEL; i++, j++) {
-        pgd_kernel[i] = ((ptr_t)VMM_LA_PA((ptr_t)pte_kernel[j]) |
-                         VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
+    // uint32_t pgd_idx = 0;
+    // ptr_t *  pte     = NULL;
+    // // TODO: 将物理地址前 0～1GB 映射到虚拟地址 0xC0000000～0xF0000000
+    // pgd_idx = VMM_PGD_INDEX(0x00);
+    // for (uint32_t i = pgd_idx, j = 0; j < VMM_PAGE_TABLES_KERNEL; i++, j++) {
+    //     pgd_kernel[i] = ((ptr_t)VMM_LA_PA((ptr_t)pte_kernel[j]) |
+    //                      VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
+    // }
+    // pte = (ptr_t *)pte_kernel;
+    // for (uint32_t i = 0; i < VMM_PAGES_KERNEL; i++) {
+    //     pte[i] = (i << 12) | VMM_PAGE_PRESENT | VMM_PAGE_RW |
+    //     VMM_PAGE_KERNEL;
+    // }
+    // 为内核页目录分配空间
+    page_dir_k = (page_dir_t *)pmm_alloc_page(VMM_PAGE_DIRECTORIES_KERNEL);
+    // 设置当前页目录
+    page_dir_curr = page_dir_k;
+    // 设置目录内容
+    for (uint32_t i = VMM_PTE_INDEX(KERNEL_BASE);
+         i < VMM_PTE_INDEX(KERNEL_BASE) + VMM_PAGE_TABLES_KERNEL; i++) {
+        for (uint32_t j = 0; j < VMM_PAGES_PRE_PAGE_TABLE; j++) {
+            page_dir_k->vmm_page_tables[i]->vmm_pages[j] =
+                *vmm_get_page(pmm_alloc_page(1), page_dir_k);
+        }
     }
-    pte = (ptr_t *)pte_kernel;
-    for (uint32_t i = 0; i < VMM_PAGES_KERNEL; i++) {
-        pte[i] = (i << 12) | VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL;
-    }
-
-    enable_page(VMM_LA_PA(pgd_kernel));
+    printk_debug("-----");
+    // enable_page(VMM_LA_PA(pgd_kernel));
+    set_pgd(page_dir_k);
+    enable_page();
 
     printk_info("vmm_init\n");
     return;
 }
 
-void enable_page(pmd_t *pgd) {
-    __asm__ volatile("mov %0, %%cr3" : : "r"(pgd));
-    uint32_t cr0;
+vmm_page_t *vmm_get_page(ptr_t addr, page_dir_t *dir) {
+    vmm_page_t *res = NULL;
+    // 如果 addr 对应的页存在
+    if (dir->vmm_page_tables[VMM_PTE_INDEX(addr)] != NULL) {
+        res = &dir->vmm_page_tables[VMM_PTE_INDEX(addr)]
+                   ->vmm_pages[VMM_OFFSET_INDEX(addr)];
+    }
+    // 不存在则创建
+    else {
+        ptr_t tmp = pmm_alloc_page(1);
+        // 设置页表
+        dir->vmm_page_tables[VMM_PTE_INDEX(addr)] = (page_dir_t *)tmp;
+        dir->page_table_phy_addrs[VMM_PTE_INDEX(addr)] =
+            tmp | VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL;
+        res = &dir->vmm_page_tables[VMM_PTE_INDEX(addr)]
+                   ->vmm_pages[VMM_OFFSET_INDEX(addr)];
+    }
+    return res;
+}
+
+void enable_page(void) {
+    uint32_t cr3 = 0;
+    __asm__ volatile("mov %%cr3, %0" : "=r"(cr3));
+    if (cr3 == NULL) {
+        printk_err("cr3 not set!\n");
+    }
+    uint32_t cr0 = 0;
     __asm__ volatile("mov %%cr0, %0" : "=r"(cr0));
     // 最高位 PG 位置 1，分页开启
     cr0 |= (1u << 31);
@@ -98,8 +144,9 @@ void enable_page(pmd_t *pgd) {
     return;
 }
 
-void switch_pgd(pmd_t *pgd) {
-    __asm__ volatile("mov %0, %%cr3" : : "r"(pgd));
+void set_pgd(page_dir_t *pgd) {
+    page_dir_curr = pgd;
+    __asm__ volatile("mov %0, %%cr3" : : "r"(&pgd->page_table_phy_addrs));
 }
 
 #ifdef __cplusplus

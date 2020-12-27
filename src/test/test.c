@@ -72,6 +72,7 @@ bool test_pmm(void) {
 
 // TODO
 bool test_vmm(void) {
+    printk_test("sizeof(page_dir_t): 0x%X\n", sizeof(page_dir_t));
     printk_test("vmm test done.\n");
     return true;
 }
