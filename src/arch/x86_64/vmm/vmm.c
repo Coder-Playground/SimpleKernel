@@ -62,6 +62,7 @@ void page_fault(pt_regs_t *pt_regs) {
     while (1) {
         ;
     }
+    return;
 }
 
 // 执行完成后，开启虚拟内存

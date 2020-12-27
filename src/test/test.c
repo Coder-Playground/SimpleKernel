@@ -15,6 +15,7 @@ extern "C" {
 #include "test.h"
 #include "debug.h"
 #include "pmm.h"
+#include "vmm.h"
 
 bool test(void) {
     test_libc();
