@@ -26,7 +26,7 @@ page_table_t *pte_kernel = NULL;
 
 // TODO: 完善缺页处理
 void page_fault(pt_regs_t *pt_regs) {
-    ptr_t pg_addr = 0x00;
+    addr_t pg_addr = 0x00;
 #ifdef __x86_64__
     __asm__ volatile("movq %%cr2,%0" : "=r"(pg_addr));
 #else
@@ -73,21 +73,21 @@ void page_fault(pt_regs_t *pt_regs) {
 void vmm_init(void) {
     register_interrupt_handler(INT_PAGE_FAULT, &page_fault);
     // TODO: 将物理地址前 0～1GB 映射到虚拟地址 0xC0000000～0xF0000000
-    ptr_t skip = pmm_alloc_page(1);
+    addr_t skip = pmm_alloc_page(1);
     printk_debug("skip: 0x%X\n", skip);
     pgd_kernel = (page_dir_t)pmm_alloc_page(1);
     printk_debug("pgd_kernel: 0x%X\n", pgd_kernel);
     pte_kernel = (page_table_t *)pmm_alloc_page(8);
     printk_debug("pte_kernel: 0x%X\n", pte_kernel[1023]);
-    printk_debug("pgd_kernel[0] = 0x%X\n", (ptr_t)pte_kernel[0] |
+    printk_debug("pgd_kernel[0] = 0x%X\n", (addr_t)pte_kernel[0] |
                                                VMM_PAGE_PRESENT | VMM_PAGE_RW |
                                                VMM_PAGE_KERNEL);
-    printk_debug("pgd_kernel[1] = 0x%X\n", (ptr_t)pte_kernel[1] |
+    printk_debug("pgd_kernel[1] = 0x%X\n", (addr_t)pte_kernel[1] |
                                                VMM_PAGE_PRESENT | VMM_PAGE_RW |
                                                VMM_PAGE_KERNEL);
     for (uint32_t i = VMM_PGD_INDEX(KERNEL_BASE), j = 0;
          j < VMM_PAGE_TABLES_KERNEL; i++, j++) {
-        pgd_kernel[i] = ((ptr_t)&pte_kernel[VMM_PAGES_PRE_PAGE_TABLE * j]) |
+        pgd_kernel[i] = ((addr_t)&pte_kernel[VMM_PAGES_PRE_PAGE_TABLE * j]) |
                         VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL;
     }
     for (uint32_t i = 0; i < VMM_PAGES_KERNEL; i++) {

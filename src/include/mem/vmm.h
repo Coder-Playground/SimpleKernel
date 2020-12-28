@@ -110,8 +110,8 @@ extern "C" {
 // 物理地址到逻辑地址转换
 #define VMM_PA_LA(pa) (pa + KERNEL_BASE)
 
-typedef ptr_t             page_t;
-typedef ptr_t             page_table_t;
+typedef addr_t            page_t;
+typedef addr_t            page_table_t;
 typedef page_t            page_table_entry_t;
 typedef page_table_t      page_dir_entry_t;
 typedef page_dir_entry_t *page_dir_t;
@@ -134,7 +134,7 @@ void vmm_init(void);
 void enable_page();
 
 // 设置当前页目录
-void set_pgd(ptr_t *pgd);
+void set_pgd(addr_t *pgd);
 
 // 初始化内核页目录
 void vmm_kernel_init(page_dir_t pgd);
