@@ -35,10 +35,10 @@ bool test_libc(void) {
 // TODO: 完善测试
 bool test_pmm(void) {
     uint32_t cd         = 0xCD;
-    ptr_t    addr1      = 0x233;
-    ptr_t    addr2      = 0x00;
-    ptr_t    addr3      = 0x00;
-    ptr_t    addr4      = 0x00;
+    addr_t   addr1      = 0x233;
+    addr_t   addr2      = 0x00;
+    addr_t   addr3      = 0x00;
+    addr_t   addr4      = 0x00;
     uint32_t free_count = pmm_free_pages_count();
     addr1               = pmm_alloc_page(0x9F);
     assert(pmm_free_pages_count() == free_count - 0x9F,
@@ -79,10 +79,10 @@ bool test_vmm(void) {
 }
 
 bool test_heap(void) {
-    ptr_t    addr1 = 0x00;
-    ptr_t    addr2 = 0x00;
-    ptr_t    addr3 = 0x00;
-    ptr_t    addr4 = 0x00;
+    addr_t   addr1 = 0x00;
+    addr_t   addr2 = 0x00;
+    addr_t   addr3 = 0x00;
+    addr_t   addr4 = 0x00;
     uint32_t bytes = heap_get_free_bytes();
     uint32_t pages = heap_get_pages();
     addr1          = kmalloc(1);
@@ -104,7 +104,7 @@ bool test_heap(void) {
     kfree(addr3);
     printk_test("Test Heap kfree: 0x%X\n", addr4);
     kfree(addr4);
-    ptr_t new_addr = kmalloc(9000);
+    addr_t new_addr = kmalloc(9000);
     printk_test("New kmalloc heap addr: 0x%X\n", new_addr);
     printk_test("heap test done.\n");
     printk("KERNEL_END_ADDR: 0x%X\n", KERNEL_END_ADDR);
