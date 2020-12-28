@@ -21,13 +21,13 @@ extern "C" {
 #define VMM_PAGE_MASK (PMM_PAGE_MASK)
 
 // 页表项 sizeof(pte_t) 大小 = 4B 2^2
-#define VMM_PTE_SIZE (sizeof(pte_t))
+#define VMM_PTE_SIZE (sizeof(page_table_entry_t))
 
 // 每页能映射多少页表项 = 页大小/页表项大小 2^10
 #define VMM_PTE_PRE_PAGE (VMM_PAGE_SIZE / VMM_PTE_SIZE)
 
 // 页目录项 sizeof(pgd_t) 大小 = 4B 2^2
-#define VMM_PGDE_SIZE (sizeof(pgd_t))
+#define VMM_PGDE_SIZE (sizeof(page_dir_entry_t))
 
 // 每页能映射多少页目录项 = 页大小/页目录项大小 2^10
 #define VMM_PGDE_PRE_PAGE (VMM_PAGE_SIZE / VMM_PGDE_SIZE)
@@ -110,56 +110,19 @@ extern "C" {
 // 物理地址到逻辑地址转换
 #define VMM_PA_LA(pa) (pa + KERNEL_BASE)
 
-// 页全局目录项
-typedef ptr_t pgd_t;
+typedef ptr_t             page_t;
+typedef ptr_t             page_table_t;
+typedef page_t            page_table_entry_t;
+typedef page_table_t      page_dir_entry_t;
+typedef page_dir_entry_t *page_dir_t;
 
-// 页上级目录项，以后拓展的时候用
-typedef ptr_t pud_t;
-
-// 页中间目录项，以后拓展的时候用
-typedef ptr_t pmd_t;
-
-// 页表项
-typedef ptr_t pte_t;
-
-// 虚拟页
-typedef struct vmm_page {
-    // Page present in memory
-    uint32_t present : 1;
-    // Read-only if clear, readwrite if set
-    uint32_t rw : 1;
-    // Supervisor level only if clear
-    uint32_t user : 1;
-    // Has the page been accessed since last refresh?
-    uint32_t accessed : 1;
-    // Has the page been written to since last refresh?
-    uint32_t dirty : 1;
-    // Amalgamation of unused and reserved bits
-    uint32_t unused : 7;
-    // Frame address (shifted right 12 bits)
-    uint32_t frame : 20;
-} vmm_page_t;
-
-// 虚拟页表
-typedef struct page_table {
-    vmm_page_t vmm_pages[VMM_PAGES_PRE_PAGE_TABLE];
-} page_table_t;
-
-// 虚拟页目录
-typedef struct page_dir {
-    page_table_t *vmm_page_tables[VMM_PAGE_TABLES_PRE_PAGE_DIRECTORY];
-    // 用于保存对应页表的物理地址，用于操作 cr3 时
-    ptr_t page_table_phy_addrs[VMM_PAGE_TABLES_PRE_PAGE_DIRECTORY];
-} page_dir_t;
-
-// 当前页目录
-extern page_dir_t *page_dir_curr;
-// 内核页目录
-extern page_dir_t *page_dir_k;
+// 当前页表
+extern page_dir_t curr_dir;
 
 // 内核页目录区域
-extern pgd_t pgd_kernel[VMM_PAGE_TABLES_PRE_PAGE_DIRECTORY]
-    __attribute__((aligned(VMM_PAGE_SIZE)));
+// extern page_dir_entry_t pgd_kernel[VMM_PAGE_TABLES_PRE_PAGE_DIRECTORY]
+//     __attribute__((aligned(VMM_PAGE_SIZE)));
+extern page_dir_t pgd_kernel;
 
 // 缺页处理
 void page_fault(pt_regs_t *pt_regs);
@@ -171,14 +134,10 @@ void vmm_init(void);
 void enable_page();
 
 // 设置当前页目录
-void set_pgd(page_dir_t *pgd);
+void set_pgd(ptr_t *pgd);
 
 // 初始化内核页目录
-void vmm_kernel_init(pmd_t *pgd);
-
-// 获取指定地址对应的的虚拟页
-// 参数为虚拟地址与页目录
-vmm_page_t *vmm_get_page(ptr_t addr, page_dir_t *dir);
+void vmm_kernel_init(page_dir_t pgd);
 
 #ifdef __cplusplus
 }
