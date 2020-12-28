@@ -70,6 +70,7 @@ extern "C" {
                     : 1))
 
 // 为内核大小+用于管理物理内存的管理结构空间大小 KERNEL_SIZE+16MB
+// 24MB
 #define VMM_KERNEL_SIZE (KERNEL_SIZE + 0x1000000UL)
 
 // 映射内核需要的页数
@@ -110,18 +111,16 @@ extern "C" {
 // 物理地址到逻辑地址转换
 #define VMM_PA_LA(pa) (pa + KERNEL_BASE)
 
-typedef void *            page_t;
-typedef void *            page_table_t;
-typedef page_t            page_table_entry_t;
-typedef page_table_t      page_dir_entry_t;
-typedef page_dir_entry_t *page_dir_t;
+typedef void *              page_t;
+typedef page_t              page_table_entry_t;
+typedef page_table_entry_t *page_table_t;
+typedef page_table_t        page_dir_entry_t;
+typedef page_dir_entry_t *  page_dir_t;
 
-// 当前页表
+// 当前页目录
 extern page_dir_t curr_dir;
 
-// 内核页目录区域
-// extern page_dir_entry_t pgd_kernel[VMM_PAGE_TABLES_PRE_PAGE_DIRECTORY]
-//     __attribute__((aligned(VMM_PAGE_SIZE)));
+// 内核页目录
 extern page_dir_t pgd_kernel;
 
 // 缺页处理

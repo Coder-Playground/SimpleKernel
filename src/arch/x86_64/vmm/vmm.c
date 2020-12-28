@@ -16,14 +16,11 @@ extern "C" {
 
 page_dir_t curr_dir = NULL;
 
-// 内核页目录区域，内容为页表
+// 内核页目录
 page_dir_t pgd_kernel = NULL;
 
-// 内核页表区域，内容为页表项
-// page_table_entry_t
-// pte_kernel[VMM_PAGE_TABLES_KERNEL][VMM_PAGES_PRE_PAGE_TABLE]
-//     __attribute__((aligned(VMM_PAGE_SIZE)));
-page_table_t *pte_kernel = NULL;
+// 内核页表
+page_table_t pte_kernel = NULL;
 
 // TODO: 完善缺页处理
 void page_fault(pt_regs_t *pt_regs) {
@@ -73,25 +70,27 @@ void page_fault(pt_regs_t *pt_regs) {
 // 内核可访问所有内存
 void vmm_init(void) {
     register_interrupt_handler(INT_PAGE_FAULT, &page_fault);
-    // TODO: 将物理地址前 0～1GB 映射到虚拟地址 0xC0000000～0xF0000000
-    // void *skip = pmm_alloc_page(1);
-    // printk_debug("skip: 0x%X\n", skip);
-    pgd_kernel = (page_dir_t)pmm_alloc_page(1);
-    printk_debug("pgd_kernel: 0x%X\n", pgd_kernel);
-    pte_kernel = (page_table_t *)pmm_alloc_page(8);
-    // printk_debug("pte_kernel: 0x%X\n", pte_kernel[1023]);
-    // printk_debug("pgd_kernel[0] = 0x%X\n", (addr_t)pte_kernel[0] |
-    //                                            VMM_PAGE_PRESENT | VMM_PAGE_RW
-    //                                            | VMM_PAGE_KERNEL);
-    // printk_debug("pgd_kernel[1] = 0x%X\n", (addr_t)pte_kernel[1] |
-    //                                            VMM_PAGE_PRESENT | VMM_PAGE_RW
-    //                                            | VMM_PAGE_KERNEL);
+    pgd_kernel = (page_dir_t)pmm_alloc_page(VMM_PAGE_DIRECTORIES_KERNEL);
+    bzero((void *)pgd_kernel, VMM_PAGE_SIZE * VMM_PAGE_DIRECTORIES_KERNEL);
+    pte_kernel = (page_table_t)pmm_alloc_page(VMM_PAGE_TABLES_KERNEL);
+    bzero((void *)pte_kernel, VMM_PAGE_SIZE * VMM_PAGE_TABLES_KERNEL);
+#define DEBUG
+#ifdef DEBUG
+    printk_debug("VMM_PAGE_DIRECTORIES_KERNEL: 0x%X\n",
+                 VMM_PAGE_DIRECTORIES_KERNEL);
+    printk_debug("VMM_PAGE_TABLES_KERNEL: 0x%X\n", VMM_PAGE_TABLES_KERNEL);
+    printk_debug("pgd_krnel: 0x%X\n", pgd_kernel);
+    printk_debug("pte_kernel: 0x%X\n", pte_kernel);
+#endif
     for (uint32_t i = VMM_PGD_INDEX(KERNEL_BASE), j = 0;
          j < VMM_PAGE_TABLES_KERNEL; i++, j++) {
-        pgd_kernel[i] =
-            (page_dir_entry_t
-                 *)(((addr_t)(&pte_kernel[VMM_PAGES_PRE_PAGE_TABLE * j])) |
-                    VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
+        pgd_kernel[i] = (page_dir_entry_t)(
+            ((addr_t)(&pte_kernel[VMM_PAGES_PRE_PAGE_TABLE * j])) |
+            VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
+// #define DEBUG
+#ifdef DEBUG
+        printk_debug("pgd_kernel[%d] = 0x%X\n", i, pgd_kernel[i]);
+#endif
     }
     for (uint32_t i = 0; i < VMM_PAGES_KERNEL; i++) {
         pte_kernel[i] = (page_table_t *)((i << 12) | VMM_PAGE_PRESENT |
