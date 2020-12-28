@@ -42,7 +42,7 @@ void kernel_main(addr_t magic, addr_t addr) {
     // 虚拟内存初始化
     vmm_init();
 
-    // test();
+    test();
     showinfo();
 
     cpu_sti();

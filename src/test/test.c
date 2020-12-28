@@ -21,8 +21,8 @@ extern "C" {
 bool test(void) {
     test_libc();
     test_pmm();
-    test_vmm();
     test_heap();
+    test_vmm();
     return true;
 }
 
@@ -74,6 +74,15 @@ bool test_pmm(void) {
 
 // TODO
 bool test_vmm(void) {
+    uint32_t *pg = 0xA0000000;
+    void *    pa = kmalloc(4);
+    addr_t    p;
+    mmap(curr_dir, pg, pa, VMM_PAGE_PRESENT | VMM_PAGE_RW | VMM_PAGE_KERNEL);
+    get_mmap(curr_dir, pg, &p);
+    printk_test("p: 0x%X\n", p);
+    unmmap(curr_dir, pg);
+    *pg = 0xCD;
+    printk_test("*pg: 0x%X\n", *pg);
     printk_test("vmm test done.\n");
     return true;
 }

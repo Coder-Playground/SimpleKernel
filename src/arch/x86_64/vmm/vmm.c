@@ -17,10 +17,10 @@ extern "C" {
 page_dir_t curr_dir = NULL;
 
 // 内核页目录
-page_dir_t pgd_kernel = NULL;
+static page_dir_t pgd_kernel = NULL;
 
 // 内核页表
-page_table_t pte_kernel = NULL;
+static page_table_t pte_kernel = NULL;
 
 // TODO: 完善缺页处理
 void page_fault(pt_regs_t *pt_regs) {
@@ -74,7 +74,7 @@ void vmm_init(void) {
     bzero((void *)pgd_kernel, VMM_PAGE_SIZE * VMM_PAGE_DIRECTORIES_KERNEL);
     pte_kernel = (page_table_t)pmm_alloc_page(VMM_PAGE_TABLES_KERNEL);
     bzero((void *)pte_kernel, VMM_PAGE_SIZE * VMM_PAGE_TABLES_KERNEL);
-#define DEBUG
+// #define DEBUG
 #ifdef DEBUG
     printk_debug("VMM_PAGE_DIRECTORIES_KERNEL: 0x%X\n",
                  VMM_PAGE_DIRECTORIES_KERNEL);
@@ -121,6 +121,52 @@ void set_pgd(page_dir_t pgd) {
     curr_dir = pgd;
     __asm__ volatile("mov %0, %%cr3" : : "r"(pgd));
     return;
+}
+
+void mmap(page_dir_t pgd, void *va, void *pa, uint32_t flag) {
+    uint32_t pgd_idx = VMM_PGD_INDEX((addr_t)va);
+    uint32_t pte_idx = VMM_PTE_INDEX((addr_t)va);
+
+    page_table_t pt = pgd[pgd_idx];
+    if (pt == NULL) {
+        pt = (page_table_t)pmm_alloc_page(1);
+        pgd[pgd_idx] =
+            (page_table_t)(((addr_t)pt) | VMM_PAGE_PRESENT | VMM_PAGE_RW);
+    }
+    pt          = (page_table_t)VMM_PA_LA(pt);
+    pt[pte_idx] = (page_table_entry_t)(((addr_t)pa) | flag);
+
+    CPU_INVLPG(va);
+    return;
+}
+
+void unmmap(page_dir_t pgd, void *va) {
+    uint32_t     pgd_idx = VMM_PGD_INDEX((addr_t)va);
+    uint32_t     pte_idx = VMM_PTE_INDEX((addr_t)va);
+    page_table_t pt      = pgd[pgd_idx];
+    if (pt == NULL) {
+        printk_debug("pt == NULL\n");
+        return;
+    }
+    pt          = (page_table_t)VMM_PA_LA(pt);
+    pt[pte_idx] = NULL;
+    CPU_INVLPG(va);
+}
+
+uint32_t get_mmap(page_dir_t pgd, void *va, void *pa) {
+    uint32_t     pgd_idx = VMM_PGD_INDEX((addr_t)va);
+    uint32_t     pte_idx = VMM_PTE_INDEX((addr_t)va);
+    page_table_t pt      = pgd[pgd_idx];
+    if (pt == NULL) {
+        return 0;
+    }
+    pt = (page_table_t)(VMM_PA_LA(pt));
+    if (pt[pte_idx] != NULL && pa != NULL) {
+        printk_debug("pt[pte_idx]: 0x%X\n", pt[pte_idx]);
+        *(addr_t *)pa = (addr_t)pt[pte_idx];
+        return 1;
+    }
+    return 0;
 }
 
 #ifdef __cplusplus

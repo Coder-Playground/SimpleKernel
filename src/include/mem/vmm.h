@@ -120,9 +120,6 @@ typedef page_dir_entry_t *  page_dir_t;
 // 当前页目录
 extern page_dir_t curr_dir;
 
-// 内核页目录
-extern page_dir_t pgd_kernel;
-
 // 缺页处理
 void page_fault(pt_regs_t *pt_regs);
 
@@ -134,6 +131,15 @@ void enable_page();
 
 // 设置当前页目录
 void set_pgd(page_dir_t pgd);
+
+// 映射物理地址到虚拟地址
+void mmap(page_dir_t pgd, void *va, void *pa, uint32_t flag);
+
+// 取消映射
+void unmmap(page_dir_t pgd, void *va);
+
+// 获取映射的物理地址
+uint32_t get_mmap(page_dir_t pgd, void *va, void *pa);
 
 // 初始化内核页目录
 void vmm_kernel_init(page_dir_t pgd);
