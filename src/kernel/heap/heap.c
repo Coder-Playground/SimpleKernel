@@ -17,7 +17,7 @@ static const heap_manage_t *heap_manager = &slab_manage;
 
 // 初始化堆
 void heap_init(void) {
-    heap_manager->heap_manage_init((void *)HEAP_START);
+    heap_manager->heap_manage_init();
     printk_info("heap_init\n");
     return;
 }
@@ -35,15 +35,15 @@ void kfree(void *addr) {
     return;
 }
 
-uint32_t heap_get_pages(void) {
+uint32_t heap_get_total(void) {
     uint32_t pages = 0;
-    pages          = heap_manager->heap_manage_get_pages();
+    pages          = heap_manager->heap_manage_get_total();
     return pages;
 }
 
-uint32_t heap_get_free_bytes(void) {
+uint32_t heap_get_free(void) {
     uint32_t bytes = 0;
-    bytes          = heap_manager->heap_manage_get_free_bytes();
+    bytes          = heap_manager->heap_manage_get_free();
     return bytes;
 }
 

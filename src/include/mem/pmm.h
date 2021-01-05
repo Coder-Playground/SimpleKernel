@@ -95,6 +95,7 @@ extern multiboot_memory_map_entry_t *mmap_entries;
 extern multiboot_mmap_tag_t *        mmap_tag;
 
 // 物理页结构体
+// TODO：可以优化，地址是对齐的，低位可以用来保存 ref 信息
 typedef struct physical_page {
     // 起始地址
     void *addr;
@@ -103,7 +104,7 @@ typedef struct physical_page {
 } physical_page_t;
 
 // 可用内存的物理页数组
-extern physical_page_t mem_page[PMM_PAGE_MAX_SIZE];
+extern physical_page_t phy_pages[PMM_PAGE_MAX_SIZE];
 
 // 内存管理结构体
 typedef struct pmm_manage {
@@ -132,10 +133,10 @@ void pmm_init(void);
 void *pmm_alloc_page(uint32_t pages);
 
 // 释放内存页
-void pmm_free_page(void *addr, uint32_t pages);
+void pheap_free_page(void *addr, uint32_t pages);
 
 // 获取空闲内存页数量
-uint32_t pmm_free_pages_count(void);
+uint32_t pheap_free_pages_count(void);
 
 #ifdef __cplusplus
 }
