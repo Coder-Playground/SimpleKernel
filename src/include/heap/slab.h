@@ -31,15 +31,15 @@ typedef struct list_entry {
 typedef struct slab_manage {
     // 管理的内存起始地址，包括头的位置
     void *addr_start;
-    // 管理的内存结束地址
+    // 管理内存结束地址
     void *addr_end;
-    // 物理内存的总大小，包括头的大小
-    size_t mm_total;
-    // 当前空闲内存大小
-    size_t mm_free;
-    // 当前存在的内存数量
+    // 堆管理的内存大小
+    size_t heap_total;
+    // 堆所有空闲内存大小
+    size_t heap_free;
+    // 堆中 block 的数量
     size_t block_count;
-    // 内存头链表
+    // 堆节点链表
     list_entry_t *slab_list;
 } slab_manage_t;
 

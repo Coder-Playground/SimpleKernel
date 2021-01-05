@@ -14,6 +14,7 @@ extern "C" {
 #include "kernel.h"
 #include "clock.h"
 #include "keyboard.h"
+#include "heap.h"
 #include "test.h"
 
 // 内核入口
@@ -32,6 +33,8 @@ void kernel_main(addr_t magic, addr_t addr) {
     debug_init(magic, addr);
     // 物理内存初始化
     pmm_init();
+    // 堆初始化
+    heap_init();
 
     test();
     showinfo();

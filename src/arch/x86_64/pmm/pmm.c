@@ -102,12 +102,12 @@ void *pmm_alloc_page(uint32_t pages) {
     return page;
 }
 
-void pmm_free_page(void *addr, uint32_t pages) {
+void pheap_free_page(void *addr, uint32_t pages) {
     pmm_manager->pmm_manage_free(addr, pages);
     return;
 }
 
-uint32_t pmm_free_pages_count(void) {
+uint32_t pheap_free_pages_count(void) {
     return pmm_manager->pmm_manage_free_pages_count();
 }
 
