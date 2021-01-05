@@ -32,74 +32,18 @@ static uint32_t get_free(void);
 heap_manage_t slab_manage = {"Slab", &init,      &alloc,
                              &free,  &get_pages, &get_free};
 
-typedef struct slab_block {
-    // 该内存块是否已经被申请
-    size_t allocated;
-    // 当前内存块的长度，不包括头长度
-    size_t len;
-} slab_block_t;
-
-// 一个仅在这里使用的简单循环链表
-typedef struct list_entry {
-    slab_block_t       slab_block;
-    struct list_entry *next;
-    struct list_entry *prev;
-} list_entry_t;
-
-// 管理结构
-typedef struct slab_manage {
-    // 管理的内存起始地址，包括头的位置
-    void *addr_start;
-    // 管理的内存结束地址
-    void *addr_end;
-    // 物理内存的总大小，包括头的大小
-    size_t mm_total;
-    // 当前空闲内存大小
-    size_t mm_free;
-    // 当前存在的内存数量
-    size_t block_count;
-    // 内存头链表
-    list_entry_t *slab_list;
-} slab_manage_t;
-
 // 管理信息
 static slab_manage_t sb_manage;
-
-// 初始化节点
-static inline void list_init(list_entry_t *list);
-
-// 在中间添加元素
-static inline void list_add_middle(list_entry_t *prev, list_entry_t *next,
-                                   list_entry_t *new);
-
-// 在 prev 后添加项
-static inline void list_add_after(list_entry_t *prev, list_entry_t *new);
-
-// 在 next 前添加项
-static inline void list_add_before(list_entry_t *next, list_entry_t *new);
-
-// 删除元素
-static inline void list_del(list_entry_t *list);
-
-// 返回前面的元素
-static inline list_entry_t *list_prev(list_entry_t *list);
-
-// 返回后面的的元素
-static inline list_entry_t *list_next(list_entry_t *list);
-
-// 返回 chunk_info
-static inline slab_block_t *list_slab_block(list_entry_t *list);
-
 // 初始化
-void list_init(list_entry_t *list) {
+static void list_init(list_entry_t *list) {
     list->next = list;
     list->prev = list;
     return;
 }
 
 // 在中间添加元素
-void list_add_middle(list_entry_t *prev, list_entry_t *next,
-                     list_entry_t *new) {
+static void list_add_middle(list_entry_t *prev, list_entry_t *next,
+                            list_entry_t *new) {
     next->prev = new;
     new->next  = next;
     new->prev  = prev;
@@ -107,44 +51,35 @@ void list_add_middle(list_entry_t *prev, list_entry_t *next,
 }
 
 // 在 prev 后添加项
-void list_add_after(list_entry_t *prev, list_entry_t *new) {
+static void list_add_after(list_entry_t *prev, list_entry_t *new) {
     list_add_middle(prev, prev->next, new);
     return;
 }
 
-// 在 next 前添加项
-void list_add_before(list_entry_t *next, list_entry_t *new) {
-    list_add_middle(next->prev, next, new);
-    return;
-}
-
 // 删除元素
-void list_del(list_entry_t *list) {
+static void list_del(list_entry_t *list) {
     list->next->prev = list->prev;
     list->prev->next = list->next;
     return;
 }
 
 // 返回前面的元素
-list_entry_t *list_prev(list_entry_t *list) {
+static list_entry_t *list_prev(list_entry_t *list) {
     return list->prev;
 }
 
 // 返回后面的的元素
-list_entry_t *list_next(list_entry_t *list) {
+static list_entry_t *list_next(list_entry_t *list) {
     return list->next;
 }
 
 // 返回 chunk_info
-slab_block_t *list_slab_block(list_entry_t *list) {
+static slab_block_t *list_slab_block(list_entry_t *list) {
     return &(list->slab_block);
 }
 
-static inline void set_used(list_entry_t *entry);
-static inline void set_unused(list_entry_t *entry);
-
 // 将 entry 设置为已使用
-static inline void set_used(list_entry_t *entry) {
+static void set_used(list_entry_t *entry) {
     list_slab_block(entry)->allocated = SLAB_USED;
     sb_manage.mm_free -= sizeof(list_entry_t);
     sb_manage.mm_free -= list_slab_block(entry)->len;
@@ -152,7 +87,7 @@ static inline void set_used(list_entry_t *entry) {
 }
 
 // 将 entry 设置为未使用
-static inline void set_unused(list_entry_t *entry) {
+static void set_unused(list_entry_t *entry) {
     list_slab_block(entry)->allocated = SLAB_UNUSED;
     sb_manage.mm_free -= sizeof(list_entry_t);
     sb_manage.mm_free += list_slab_block(entry)->len;
