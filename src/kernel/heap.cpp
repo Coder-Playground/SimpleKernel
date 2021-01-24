@@ -29,9 +29,7 @@ int32_t HEAP::manage_init(void) {
 }
 
 void *HEAP::malloc(size_t byte) {
-    void *addr = NULL;
-    addr       = slab.alloc(byte);
-    return addr;
+    return slab.alloc(byte);
 }
 
 void HEAP::free(void *addr) {
@@ -40,13 +38,9 @@ void HEAP::free(void *addr) {
 }
 
 size_t HEAP::get_total(void) {
-    uint32_t pages = 0;
-    pages          = slab.get_total();
-    return pages;
+    return slab.get_total();
 }
 
 size_t HEAP::get_free(void) {
-    uint32_t bytes = 0;
-    bytes          = slab.get_free();
-    return bytes;
+    return slab.get_free();
 }

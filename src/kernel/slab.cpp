@@ -39,7 +39,7 @@ SLAB::slab_list_entry_t *SLAB::slab_split(slab_list_entry_t *entry,
         slab_block(entry)->len = len;
         return new_entry;
     }
-    return (slab_list_entry_t *)NULL;
+    return (slab_list_entry_t *)nullptr;
 }
 
 void SLAB::slab_merge(slab_list_entry_t *list) {
@@ -74,7 +74,7 @@ SLAB::slab_list_entry_t *SLAB::find_entry(size_t len) {
             return entry;
         }
     } while ((entry = list_next(entry)) != slab_list);
-    return (slab_list_entry_t *)NULL;
+    return (slab_list_entry_t *)nullptr;
 }
 
 SLAB::slab_block_t *SLAB::slab_block(slab_list_entry_t *list) {
@@ -99,8 +99,8 @@ int32_t SLAB::init(void) {
     slab_list = (slab_list_entry_t *)pmm.alloc_page(1);
     bzero(slab_list, PMM_PAGE_SIZE);
     // 填充管理信息
-    addr_start  = NULL;
-    addr_end    = NULL;
+    addr_start  = nullptr;
+    addr_end    = nullptr;
     heap_total  = PMM_PAGE_SIZE;
     heap_free   = PMM_PAGE_SIZE - sizeof(slab_list_entry_t);
     block_count = 1;
@@ -116,7 +116,7 @@ void *SLAB::alloc(size_t byte) {
     // 所有申请的内存长度(限制最小大小)加上管理头的长度
     size_t             len   = (byte > SLAB_MIN) ? byte : SLAB_MIN;
     slab_list_entry_t *entry = find_entry(len);
-    if (entry != NULL) {
+    if (entry != nullptr) {
         set_used(entry);
         return (void *)((uint8_t *)entry + sizeof(slab_list_entry_t));
     }
@@ -126,9 +126,9 @@ void *SLAB::alloc(size_t byte) {
     size_t pages = (len % PMM_PAGE_SIZE == 0) ? (len / PMM_PAGE_SIZE)
                                               : ((len / PMM_PAGE_SIZE) + 1);
     slab_list_entry_t *new_entry = (slab_list_entry_t *)pmm.alloc_page(pages);
-    if (new_entry == NULL) {
+    if (new_entry == nullptr) {
         io.printf("Error at slab.c void *alloc(): no enough physical memory\n");
-        return NULL;
+        return nullptr;
     }
     list_init_head(new_entry);
     // 新表项的可用长度为减去头的大小

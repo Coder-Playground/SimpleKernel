@@ -78,10 +78,10 @@ int32_t KERNEL::test_pmm(void) {
 }
 
 int32_t KERNEL::test_heap(void) {
-    void * addr1 = NULL;
-    void * addr2 = NULL;
-    void * addr3 = NULL;
-    void * addr4 = NULL;
+    void * addr1 = nullptr;
+    void * addr2 = nullptr;
+    void * addr3 = nullptr;
+    void * addr4 = nullptr;
     size_t free  = heap.get_free();
     size_t total = heap.get_total();
     // BUG:
