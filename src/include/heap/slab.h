@@ -7,11 +7,7 @@
 #ifndef _SLAB_H_
 #define _SLAB_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "heap.h"
+#include "pmm.h"
 
 typedef struct slab_block {
     // 该内存块是否已经被申请
@@ -27,27 +23,44 @@ typedef struct list_entry {
     struct list_entry *prev;
 } list_entry_t;
 
-// 管理结构
-typedef struct slab_manage {
+class SLAB {
+private:
+    static constexpr const uint32_t SLAB_USED   = 0x00;
+    static constexpr const uint32_t SLAB_UNUSED = 0x01;
+    // 最小空间
+    static constexpr const uint32_t SLAB_MIN = 0xFF;
+
     // 管理的内存起始地址，包括头的位置
     void *addr_start;
     // 管理内存结束地址
     void *addr_end;
-    // 堆管理的内存大小
+    // 堆管理的内存大小 单位为 bytes
     size_t heap_total;
-    // 堆所有空闲内存大小
+    // 堆所有空闲内存大小 单位为 bytes
     size_t heap_free;
     // 堆中 block 的数量
     size_t block_count;
     // 堆节点链表
     list_entry_t *slab_list;
-} slab_manage_t;
+    PMM           pmm;
 
-// 用于管理堆物理地址
-extern heap_manage_t slab_manage;
+    list_entry_t *slab_split(list_entry_t *entry, size_t len);
+    void          slab_merge(list_entry_t *list);
+    list_entry_t *find_entry(size_t len);
 
-#ifdef __cplusplus
-}
-#endif
+protected:
+public:
+    SLAB(PMM &pmm);
+    ~SLAB(void);
+    int32_t init(void);
+    // 内存申请，单位为 Byte
+    void *alloc(size_t byte);
+    // 内存释放
+    void free(void *p);
+    // 获取管理的内存大小，包括管理信息
+    size_t get_total(void);
+    // 获取空闲内存数量 单位为 byte
+    size_t get_free(void);
+};
 
 #endif /* _SLAB_H_ */
