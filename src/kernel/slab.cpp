@@ -79,7 +79,7 @@ int32_t SLAB::init(void) {
     // 设置第一块内存的信息
     // 首先给链表中添加一个大小为 1 页的块
     slab_list_entry_t *sb_list = (slab_list_entry_t *)pmm.alloc_page(1);
-    bzero((void *)sb_list, PMM_PAGE_SIZE);
+    bzero(sb_list, PMM_PAGE_SIZE);
     // 填充管理信息
     addr_start  = NULL;
     addr_end    = NULL;
@@ -103,7 +103,7 @@ slab_list_entry_t *SLAB::slab_split(slab_list_entry_t *entry, size_t len) {
          sizeof(slab_list_entry_t) + SLAB_MIN)) {
         // 添加新的链表项，位于旧表项开始地址+旧表项长度
         slab_list_entry_t *new_entry =
-            (slab_list_entry_t *)((void *)entry + sizeof(slab_list_entry_t) +
+            (slab_list_entry_t *)((uint8_t *)entry + sizeof(slab_list_entry_t) +
                                   len);
 
         bzero((void *)new_entry, list_slab_block(entry)->len - len);
@@ -163,7 +163,7 @@ void *SLAB::alloc(size_t byte) {
     slab_list_entry_t *entry = find_entry(len);
     if (entry != NULL) {
         set_used(entry);
-        return ((void *)entry + sizeof(slab_list_entry_t));
+        return (void *)((uint8_t *)entry + sizeof(slab_list_entry_t));
     }
     entry = list_prev(slab_list);
     // 如果执行到这里，说明没有可用空间了，那么申请新的内存页
@@ -172,8 +172,7 @@ void *SLAB::alloc(size_t byte) {
                                               : ((len / PMM_PAGE_SIZE) + 1);
     slab_list_entry_t *new_entry = (slab_list_entry_t *)pmm.alloc_page(pages);
     if (new_entry == NULL) {
-        io.printf("Error at slab.c void *alloc(): no enough physical "
-                  "memory\n");
+        io.printf("Error at slab.c void *alloc(): no enough physical memory\n");
         return NULL;
     }
     list_init(new_entry);
@@ -184,13 +183,13 @@ void *SLAB::alloc(size_t byte) {
     // 进行分割
     slab_split(new_entry, len);
     set_used(new_entry);
-    return ((void *)new_entry + sizeof(slab_list_entry_t));
+    return (void *)((uint8_t *)new_entry + sizeof(slab_list_entry_t));
 }
 
 void SLAB::free(void *addr) {
     // 获取实际开始地址
     slab_list_entry_t *entry =
-        (slab_list_entry_t *)(addr - sizeof(slab_list_entry_t));
+        (slab_list_entry_t *)((uint8_t *)addr - sizeof(slab_list_entry_t));
     if (list_slab_block(entry)->allocated != SLAB_USED) {
         io.printf("Error at slab.c void free(void *)\n");
         return;
