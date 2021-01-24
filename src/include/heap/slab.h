@@ -23,10 +23,11 @@ typedef struct slab_list_entry {
     struct slab_list_entry *prev;
 } slab_list_entry_t;
 
+static constexpr const uint32_t SLAB_USED   = 0x00;
+static constexpr const uint32_t SLAB_UNUSED = 0x01;
+
 class SLAB {
 private:
-    static constexpr const uint32_t SLAB_USED   = 0x00;
-    static constexpr const uint32_t SLAB_UNUSED = 0x01;
     // 最小空间
     static constexpr const uint32_t SLAB_MIN = 0xFF;
 
@@ -42,7 +43,7 @@ private:
     size_t block_count;
     // 堆节点链表
     slab_list_entry_t *slab_list;
-    PMM                pmm;
+    PMM &              pmm;
 
     slab_list_entry_t *slab_split(slab_list_entry_t *entry, size_t len);
     void               slab_merge(slab_list_entry_t *list);

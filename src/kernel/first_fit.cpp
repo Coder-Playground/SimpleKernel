@@ -192,7 +192,6 @@ void *FIRSTFIT::alloc(size_t pages) {
             }
         }
     } while ((entry = list_next(entry)) != free_list);
-
     return res_addr;
 }
 

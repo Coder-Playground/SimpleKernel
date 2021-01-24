@@ -57,13 +57,13 @@ static slab_block_t *list_slab_block(slab_list_entry_t *list) {
 
 // 将 entry 设置为已使用
 static void set_used(slab_list_entry_t *entry) {
-    list_slab_block(entry)->allocated = 0x00;
+    list_slab_block(entry)->allocated = SLAB_USED;
     return;
 }
 
 // 将 entry 设置为未使用
 static void set_unused(slab_list_entry_t *entry) {
-    list_slab_block(entry)->allocated = 0x01;
+    list_slab_block(entry)->allocated = SLAB_UNUSED;
     return;
 }
 
@@ -78,15 +78,14 @@ SLAB::~SLAB(void) {
 int32_t SLAB::init(void) {
     // 设置第一块内存的信息
     // 首先给链表中添加一个大小为 1 页的块
-    slab_list_entry_t *sb_list = (slab_list_entry_t *)pmm.alloc_page(1);
-    bzero(sb_list, PMM_PAGE_SIZE);
+    slab_list = (slab_list_entry_t *)pmm.alloc_page(1);
+    bzero(slab_list, PMM_PAGE_SIZE);
     // 填充管理信息
     addr_start  = NULL;
     addr_end    = NULL;
     heap_total  = PMM_PAGE_SIZE;
     heap_free   = PMM_PAGE_SIZE - sizeof(slab_list_entry_t);
     block_count = 1;
-    slab_list   = sb_list;
     list_init(slab_list);
     // 设置第一块内存的相关信息
     list_slab_block(slab_list)->allocated = SLAB_UNUSED;

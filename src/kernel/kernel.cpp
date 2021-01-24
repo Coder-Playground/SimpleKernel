@@ -85,12 +85,11 @@ int32_t KERNEL::test_heap(void) {
     void * addr4 = NULL;
     size_t free  = heap.get_free();
     size_t total = heap.get_total();
+    // BUG:
+    // 在测试中观察到连续执行 heap.malloc(1);heap.malloc(1);
+    // ，得到的地址相差一页以上，正常情况应该是 SLAB_MIN+管理结构大小
     io.printf("free: 0x%X, total: 0x%X\n", free, total);
     addr1 = heap.malloc(1);
-    io.printf("free1: 0x%X, total1: 0x%X\n", heap.get_free(), heap.get_total());
-    // assert(total == heap_get_total(), "heap test addr1 heap_get_total().\n");
-    // assert(heap_get_free() == (free - 0xFF - 1),
-    //        "heap test addr1 heap_get_free().\n");
     io.printf("kmalloc heap addr1: 0x%X\n", addr1);
     addr2 = heap.malloc(9000);
     io.printf("kmalloc heap addr2: 0x%X\n", addr2);
@@ -138,6 +137,8 @@ int32_t KERNEL::init(void) {
     debug.init(magic, addr);
     // 物理内存管理初始化
     pmm.init();
+    // 堆初始化
+    heap.init();
     // 显示内核信息
     this->show_info();
     return 0;
