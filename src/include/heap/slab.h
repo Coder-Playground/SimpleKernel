@@ -9,25 +9,24 @@
 
 #include "pmm.h"
 
-typedef struct slab_block {
-    // 该内存块是否已经被申请
-    size_t allocated;
-    // 当前内存块的长度，不包括头长度
-    size_t len;
-} slab_block_t;
-
-// 一个仅在这里使用的简单循环链表
-typedef struct slab_list_entry {
-    slab_block_t            slab_block;
-    struct slab_list_entry *next;
-    struct slab_list_entry *prev;
-} slab_list_entry_t;
-
-static constexpr const uint32_t SLAB_USED   = 0x00;
-static constexpr const uint32_t SLAB_UNUSED = 0x01;
-
 class SLAB {
 private:
+    typedef struct slab_block {
+        // 该内存块是否已经被申请
+        size_t allocated;
+        // 当前内存块的长度，不包括头长度
+        size_t len;
+    } slab_block_t;
+
+    // 一个仅在这里使用的简单循环链表
+    typedef struct slab_list_entry {
+        slab_block_t            slab_block;
+        struct slab_list_entry *next;
+        struct slab_list_entry *prev;
+    } slab_list_entry_t;
+
+    static constexpr const uint32_t SLAB_USED   = 0x00;
+    static constexpr const uint32_t SLAB_UNUSED = 0x01;
     // 最小空间
     static constexpr const uint32_t SLAB_MIN = 0xFF;
 
@@ -45,9 +44,16 @@ private:
     slab_list_entry_t *slab_list;
     PMM &              pmm;
 
+    // 切分内存块，len 为调用者申请的大小，不包括头大小
+    // 返回分割出来的管理头地址
     slab_list_entry_t *slab_split(slab_list_entry_t *entry, size_t len);
-    void               slab_merge(slab_list_entry_t *list);
+    // 合并内存块
+    void slab_merge(slab_list_entry_t *list);
+    // 寻找长度符合的项
     slab_list_entry_t *find_entry(size_t len);
+    slab_block_t *     slab_block(slab_list_entry_t *list);
+    void               set_used(slab_list_entry_t *entry);
+    void               set_unused(slab_list_entry_t *entry);
 
 protected:
 public:
