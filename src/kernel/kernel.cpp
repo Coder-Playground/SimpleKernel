@@ -22,12 +22,11 @@
 #include "framebuffer.h"
 #endif
 
-KERNEL::KERNEL(void) {
-    pmm = PMM();
+KERNEL::KERNEL(void) : pmm(PMM()), heap(HEAP(pmm)) {
     return;
 }
 
-KERNEL::KERNEL(addr_t magic, addr_t addr) {
+KERNEL::KERNEL(addr_t magic, addr_t addr) : pmm(PMM()), heap(HEAP(pmm)) {
     this->magic = magic;
     this->addr  = addr;
     return;
@@ -79,6 +78,40 @@ int32_t KERNEL::test_pmm(void) {
     return 0;
 }
 
+int32_t KERNEL::test_heap(void) {
+    void * addr1 = NULL;
+    void * addr2 = NULL;
+    void * addr3 = NULL;
+    void * addr4 = NULL;
+    size_t free  = heap.get_free();
+    size_t total = heap.get_total();
+    io.printf("free: 0x%X, total: 0x%X\n", free, total);
+    addr1 = heap.malloc(1);
+    io.printf("free1: 0x%X, total1: 0x%X\n", heap.get_free(), heap.get_total());
+    // assert(total == heap_get_total(), "heap test addr1 heap_get_total().\n");
+    // assert(heap_get_free() == (free - 0xFF - 1),
+    //        "heap test addr1 heap_get_free().\n");
+    io.printf("kmalloc heap addr1: 0x%X\n", addr1);
+    addr2 = heap.malloc(9000);
+    io.printf("kmalloc heap addr2: 0x%X\n", addr2);
+    addr3 = heap.malloc(4095);
+    io.printf("kmalloc heap addr3: 0x%X\n", addr3);
+    addr4 = heap.malloc(12);
+    io.printf("kmalloc heap addr4: 0x%X\n", addr4);
+    io.printf("Test Heap kfree1: 0x%X\n", addr1);
+    heap.free(addr1);
+    io.printf("Test Heap kfree2: 0x%X\n", addr2);
+    heap.free(addr2);
+    io.printf("Test Heap kfree3: 0x%X\n", addr3);
+    heap.free(addr3);
+    io.printf("Test Heap kfree4: 0x%X\n", addr4);
+    heap.free(addr4);
+    void *new_addr = heap.malloc(9000);
+    io.printf("New kmalloc heap addr new: 0x%X\n", new_addr);
+    io.printf("heap test done.\n");
+    return 0;
+}
+
 void KERNEL::show_info(void) {
     // 输出一些基本信息
     io.printf(LIGHT_GREEN, "kernel in memory start: 0x%08X, end 0x%08X\n",
@@ -112,5 +145,6 @@ int32_t KERNEL::init(void) {
 
 int32_t KERNEL::test(void) {
     test_pmm();
+    test_heap();
     return 0;
 }

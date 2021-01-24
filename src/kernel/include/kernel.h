@@ -25,6 +25,7 @@ private:
 
     void    arch_init(void) const;
     int32_t test_pmm(void);
+    int32_t test_heap(void);
 
 protected:
 public:

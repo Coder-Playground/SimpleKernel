@@ -17,11 +17,11 @@ typedef struct slab_block {
 } slab_block_t;
 
 // 一个仅在这里使用的简单循环链表
-typedef struct list_entry {
-    slab_block_t       slab_block;
-    struct list_entry *next;
-    struct list_entry *prev;
-} list_entry_t;
+typedef struct slab_list_entry {
+    slab_block_t            slab_block;
+    struct slab_list_entry *next;
+    struct slab_list_entry *prev;
+} slab_list_entry_t;
 
 class SLAB {
 private:
@@ -41,12 +41,12 @@ private:
     // 堆中 block 的数量
     size_t block_count;
     // 堆节点链表
-    list_entry_t *slab_list;
-    PMM           pmm;
+    slab_list_entry_t *slab_list;
+    PMM                pmm;
 
-    list_entry_t *slab_split(list_entry_t *entry, size_t len);
-    void          slab_merge(list_entry_t *list);
-    list_entry_t *find_entry(size_t len);
+    slab_list_entry_t *slab_split(slab_list_entry_t *entry, size_t len);
+    void               slab_merge(slab_list_entry_t *list);
+    slab_list_entry_t *find_entry(size_t len);
 
 protected:
 public:
